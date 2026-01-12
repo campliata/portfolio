@@ -1,0 +1,27 @@
+
+This file:
+- proves rendering works
+- teaches PRs immediately
+- becomes their first portfolio entry
+
+---
+
+## `r-packages.txt`
+(used **before** `renv` is introduced)
+
+```text
+usethis
+gitcreds
+readr
+dplyr
+tidyr
+lubridate
+here
+janitor
+ggplot2
+sf
+leaflet
+scales
+ggspatial
+rticles
+tinytex

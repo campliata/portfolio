@@ -1,0 +1,12 @@
+---
+title: "A00 — Setup and Hello World"
+date: 2026-01-01
+format: html
+---
+
+## Goal
+Confirm that R, Quarto, GitHub, and rendering all work.
+
+## R works
+```{r}
+1 + 1
