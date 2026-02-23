@@ -1,0 +1,39 @@
+---
+title: "a02 Tidying Data"
+format: html
+date: 2026-23-02
+author: Tokay Alberts
+---
+
+# Introduction
+
+My data is a count of small mammal species found at each site of the Boria Lab's 2025 fieldwork season. I compiled this csv to do a community assemblage analysis for a poster this summer. I wanted to look at if community assemblages across the Bay Area significantly differ and possibly correlate it to genetic data we may or may not have in time for the conference. I compiled these counts based off of our "Master Sheet" which combines fieldnotes from my labmate and PI. Each Species is assigned a shortened identifier. For example, Peromyscus maniculatus is PEMA, Reithrodontomys megalotis is REME, and Mus musculus is MUMU. Taxa where we could not ID species are left at the genus level, such as SOREX and NEOTOMA.
+
+Date downloaded: February 23, 2026
+
+# Data
+
+```{r}
+data <- read.csv("../data/processed/community assemblage data.csv")
+str(data)
+head(data)
+summary(data)
+```
+
+My data looks like this, which is not tidy, because each row does not represent a unique observation.
+
+# Analysis
+
+My data is not tidy because it has one kind of variable along the top row (site location), and another type of variable in the leftmost column (ID). Currently, I don't think I have a primary key, but my IDs and Place abbreviations are foreign keys, because their meanings are only defined in the Boria Lab Master Sheet.
+
+Each row does not represent a unique observation, which would make it tidy. I could use the package tidyverse to change it to be tidy, so that it would look more like this:
+
+| Place | Animal ID | Count |
+|-------|-----------|-------|
+| SBJR  | PEMA      | 1     |
+| SRSP  | PEMA      | 4     |
+| SJARP | PEMA      | 1     |
+
+# Conclusion
+
+In conclusion, my data is not tidy, but by using a package I could make it so that it is. I can also change how I set up my data sheets such that it is easier to extract data so I don't have to be counting manually, like I did in order to build this matrix.
