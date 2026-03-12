@@ -1,0 +1,134 @@
+---
+title: "a03 cleaning data"
+author: Tokay Alberts
+editor: visual
+date: March 12, 2026
+---
+
+```{r}
+#|warning: false
+library(dplyr)
+library(tidyr)
+library(readr)
+```
+
+## Introduction
+
+The salmon fisheries industry is a massive, multi-billion dollar industry that deeply affects many aspects of peoples lives and ecosystems. With climate change, overfishing is becoming more of a concern as populations struggle to rebound from threats at several levels. Long-term occurrence data is thus essential to monitoring trends in population take and assessing sustainability. Salmon are also considered a keystone species, which further support other species and can serve as indicators of ecosystem health.
+
+## Data
+
+The data in this assignment was downloaded from the KNB repository and includes Alaska commercial salmon catch by region from 1886-1997. It was downloaded at this link on March 12th, 2026: <https://knb.ecoinformatics.org/view/df35b.304.2>
+
+This data was generated from a fish ticket system, which reports all salmon that are sold.
+
+```{r}
+catch_original <- read.csv(url("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/df35b.302.1", method = "libcurl"))
+
+```
+
+## Analysis
+
+```{r}
+#data exploration
+## First 6 lines of the data frame
+head(catch_original)
+## Summary of each column of data
+summary(catch_original)
+```
+
+```{r}
+#filter for the columns you want
+catch_data <- catch_original %>%
+    select(Region, Year, Chinook, Sockeye, Coho, Pink, Chum)
+
+head(catch_data)
+```
+
+```{r}
+dplyr::glimpse(catch_data)
+# changing chinook from character to numeric
+catch_clean <- catch_data %>%
+    mutate(Chinook = as.numeric(Chinook))
+head(catch_clean)
+```
+
+```{r}
+i <- which(is.na(catch_clean$Chinook))
+i
+#view row 401
+catch_data[i,]
+
+#change the i to a 1
+catch_clean <- catch_data %>%
+    mutate(Chinook = if_else(condition = Chinook == "I", 
+                             true = "1", 
+                             false = Chinook),
+           Chinook = as.numeric(Chinook))
+
+##check
+catch_clean[i, ]
+```
+
+```{r}
+catch_long <- catch_clean %>% 
+    #pivot longer all columns except Region and Year
+    pivot_longer(
+        cols = -c(Region, Year),
+        names_to = "species",
+        values_to = "catch"
+    )
+
+head(catch_long)
+
+# change catch to thousands
+catch_long <- catch_long %>%
+    rename(catch_thousands = catch)
+
+catch_long <- catch_long %>%
+    mutate(catch = catch_thousands * 1000)
+
+# remove catch thousands column
+catch_long <- catch_long %>%
+    mutate(catch = catch_thousands * 1000) %>%
+    select(-catch_thousands)
+
+head(catch_long)
+```
+
+```{r}
+#summarizing means by region
+mean_region <- catch_long %>%
+    group_by(Region) %>%
+    summarize(mean_catch = mean(catch))
+
+head(mean_region)
+```
+
+```{r}
+#filtering
+sse_catch <- catch_long %>%
+    filter(Region == "SSE")
+
+head(sse_catch)
+# sorting
+mean_region <- catch_long %>%
+    group_by(Region) %>%
+    summarize(mean_catch = mean(catch)) %>%
+    arrange(mean_catch)
+
+head(mean_region)
+#splitting by location
+sites_df <- data.frame(site = c("HAW-101",
+                                "HAW-103",
+                                "OAH-320",
+                                "OAH-219",
+                                "MAU-039"))
+
+sites_df %>%
+    separate(site, c("island", "site_number"), "-")
+```
+
+## Discussion
+
+This analysis demonstrates the importance of data cleaning and filtering to manipulate variables for better readability. Replacing incorrect values using functions is essential for reproducibility and helps avoid future headaches. This data also lays out the most productive regions of salmon catch across several decades.
