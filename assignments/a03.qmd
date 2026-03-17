@@ -2,6 +2,8 @@
 title: "a03 cleaning data"
 author: Tokay Alberts
 editor: visual
+on:
+  workflow_dispatch:
 date: March 12, 2026
 ---
 

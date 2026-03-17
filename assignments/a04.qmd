@@ -1,0 +1,93 @@
+---
+title: "R Practice: Tidy Data and Joins"
+editor: visual
+author: Tokay Alberts
+on:
+  workflow_dispatch:
+date: March 12, 2026
+---
+
+```{r}
+#|warning: false
+library(readr)
+library(dplyr)
+library(here)
+library(lubridate)
+```
+
+## Introduction
+
+Urbanization is one of the most dramatic ways humans are transforming landscapes. We can drastically alter the makeup of an environment by increasing the amount of impervious surface area, introduce new sources of mortality, and facilitate the spread of nonnative species. Urban ecology emerging as an essential field that meets the intersection of human-wildlife needs.
+
+## Data
+
+```{r}
+# read in data from the data directory
+bird_observations <- read.csv("../data/raw/52_pp52_birds_1.csv")
+surveys <- read.csv("../data/raw/52_pp52_surveys_1.csv")
+sites <- read.csv("../data/raw/52_pp52_sites_1.csv")
+taxalist <- read.csv("../data/raw/52_pp52_taxalist_1.csv")
+```
+
+Data was downloaded from the data package summary of the paper:
+
+Warren, P.S., A. Kinzig, C.A. Martin, and L. Machabee. 2021. Ecological and social Interactions in urban parks: bird surveys in local parks in the central Arizona-Phoenix metropolitan area ver 10. Environmental Data Initiative. https://doi.org/10.6073/pasta/f6f004bc7112ce266fde2b80fad19ff4 (Accessed 2026-03-12).
+
+Data was downloaded on March 12, 2026 from this link: <https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-cap&identifier=256&revision=10>
+
+## Analysis
+
+```{r}
+# create subset of bird_observations that only contains obs for species BHCO and RWBL from sites LI-W and NU-C
+birds_subset <- bird_observations %>% 
+  filter(species_id %in% c("BHCO", "RWBL")) %>% 
+  filter(site_id %in% c("LI-W", "NU-C"))
+```
+
+This output will contain NAs because it is a full join instead of an inner join
+
+```{r}
+# syntax using pipe
+birds_full <- birds_subset %>% 
+  full_join(y = sites, by = "site_id")
+
+```
+
+```{r}
+bird_obs_subset <- bird_observations %>% 
+  full_join(y = taxalist, by = "species_id") %>% 
+  full_join(y = sites, by = "site_id") %>% 
+  full_join(y = surveys, by = c("site_id", "survey_id")) %>%  
+  select(survey_date, common_name, park_name, bird_count, observer)
+```
+
+Lubridate to add new column to bird_obs_subset called survey_month
+
+```{r}
+bird_obs_subset <- bird_obs_subset %>%
+  mutate(survey_month = as.factor(lubridate::month(bird_obs_subset$survey_date)))
+
+```
+
+```{r}
+# moving column to after survey_date
+bird_obs_subset <- bird_obs_subset %>%
+  dplyr::relocate(survey_month, .after = survey_date)
+
+# filter to only include these parks
+bird_obs_subset <- bird_obs_subset %>%
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+```
+
+```{r}
+# find total number of birds observed by park and month
+bird_park_total <- bird_obs_subset %>%
+  group_by(park_name, survey_month) %>%
+  summarize(n = n())
+
+head(bird_park_total)
+```
+
+## Summary
+
+This data frame originally did not give me the output I wanted, because I was having trouble summarizing both park and month in the same table. It also is not as clean as it could be, because it contains NAs. I could have avoided this by doing an inner join, but chose to do the full join because that is the step that created the variable bird_obs_subset for the questions. It is informative, because it is now in a format which would make it easy for me to graph these results. I can also see that peak bird observations seem to be in the fall and winter (December) months. Personally, I would improve this process by making it clearer from the get go which type of join I wanted to do, and what the end goal looks like.
