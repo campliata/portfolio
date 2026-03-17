@@ -1,0 +1,103 @@
+---
+title: "R Practice: Tidy Data and Joins"
+editor: visual
+author: Tokay Alberts
+date: March 12, 2026
+---
+
+```{r}
+#|warning: false
+library(readr)
+library(dplyr)
+library(here)
+library(lubridate)
+```
+
+## Introduction
+
+Urbanization is one of the most dramatic ways humans are transforming landscapes. We can drastically alter the makeup of an environment by increasing the amount of impervious surface area, introduce new sources of mortality, and facilitate the spread of nonnative species. Urban ecology emerging as an essential field that meets the intersection of human-wildlife needs.
+
+## Data
+
+```{r}
+# read in data from the data directory
+bird_observations <- read.csv("../data/raw/52_pp52_birds_1.csv")
+surveys <- read.csv("../data/raw/52_pp52_surveys_1.csv")
+sites <- read.csv("../data/raw/52_pp52_sites_1.csv")
+taxalist <- read.csv("../data/raw/52_pp52_taxalist_1.csv")
+```
+
+Data was downloaded from the data package summary of the paper:
+
+Warren, P.S., A. Kinzig, C.A. Martin, and L. Machabee. 2021. Ecological and social Interactions in urban parks: bird surveys in local parks in the central Arizona-Phoenix metropolitan area ver 10. Environmental Data Initiative. https://doi.org/10.6073/pasta/f6f004bc7112ce266fde2b80fad19ff4 (Accessed 2026-03-12).
+
+Data was downloaded on March 12, 2026 from this link: <https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-cap&identifier=256&revision=10>
+
+## Analysis
+
+```{r}
+# create subset of bird_observations that only contains obs for species BHCO and RWBL from sites LI-W and NU-C
+birds_subset <- bird_observations %>% 
+  filter(species_id %in% c("BHCO", "RWBL")) %>% 
+  filter(site_id %in% c("LI-W", "NU-C"))
+```
+
+```{r}
+# left join bird_subset and sites. I expect that all columns and observations from birds_subset to include the observations from the filtered sites. only the observations matching these sites will be kept in a full join
+# syntax using pipe
+
+birds_left <- birds_subset %>% 
+  left_join(y = sites, by = "site_id")
+# here, i am joining by the key birds_subset
+```
+
+Full join
+
+```{r}
+# syntax using pipe
+birds_full <- birds_subset %>% 
+  full_join(y = sites, by = "site_id")
+
+```
+
+Inner join and left join
+
+```{r}
+# syntax using pipe
+birds_inner <- birds_subset %>% 
+  inner_join(y = taxalist, by = "species_id")
+```
+
+```{r}
+# syntax using pipe
+birds_inner_left <- birds_subset %>% 
+  left_join(y = taxalist, by = "species_id")
+```
+
+```{r}
+bird_observations <- bird_observations %>% 
+  rename(bird_obs_notes = notes)
+
+```
+
+```{r}
+bird_obs_subset <- bird_observations %>% 
+  full_join(y = taxalist, by = "species_id") %>% 
+  full_join(y = sites, by = "site_id") %>% 
+  full_join(y = surveys, by = c("site_id", "survey_id")) %>%  
+  select(survey_date, common_name, park_name, bird_count, observer)
+```
+
+fix values in observer so all values are in the same format
+
+```{r}
+unique(bird_obs_subset$observer)
+bird_obs_subset <- bird_obs_subset %>% 
+  mutate(observer = if_else(condition = observer == "Josh Burns", 
+                            true = "J. Burns", 
+                            false = observer))
+
+unique(bird_obs_subset$observer)
+```
+
+## Summary

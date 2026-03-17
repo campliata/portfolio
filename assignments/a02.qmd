@@ -2,6 +2,8 @@
 title: "a02 Tidying Data"
 format: html
 date: 2026-23-02
+on:
+  workflow_dispatch:
 author: Tokay Alberts
 ---
 
