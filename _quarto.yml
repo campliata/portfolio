@@ -1,7 +1,8 @@
 project:
   type: default
   output-dir: .
-
+on:
+  workflow_dispatch:
 format:
   html:
     toc: true
