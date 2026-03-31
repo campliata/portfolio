@@ -1,0 +1,129 @@
+---
+title: "a05"
+author: Tokay Alberts
+date: March 16, 2026
+on:
+  workflow_dispatch:
+editor: visual
+---
+
+## Introduction
+
+Effective data visualization is an essential skill for all kinds of people who regularly work with data. Good visual communication can make or break your paper's ability to be published or digestible to your intended audience. I have used ggplot2 extensively, but have never used it to make interactable maps before. This has a lot of potential applicability for projects I am working on which require a lot of data visualization.
+
+This dataset was provided by the EDI Data Portal for the publication Kraus-Polk, A. and B. Milligan. 2020. Sacramento-San Joaquin Delta Socioecological Monitoring ver 1. Environmental Data Initiative. https://doi.org/10.6073/pasta/e5bba3945d7f94c3005a7f8c38d00802 (Accessed 2026-03-31). <https://portal.edirepository.org/nis/mapbrowse?packageid=edi.587.1>
+
+And was accessed March 31, 2026.
+
+## Data
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(forcats) # makes working with factors easier
+library(ggplot2)
+library(leaflet) # interactive maps
+library(DT) # interactive tables
+library(scales) # scale functions for visualization
+library(janitor) # expedite cleaning and exploring data
+library(viridis) # colorblind friendly color palette
+```
+
+```{r}
+# read in data from the data directory after manually downloading data 
+delta_visits_raw <- read_csv(here::here("data/raw/Socioecological_monitoring_data.csv"))
+
+```
+
+## Analysis
+
+```{r}
+# clean the column names to be snake case
+delta_visits <- delta_visits_raw %>% 
+    janitor::clean_names()
+```
+
+```{r}
+# making the data tidy by making every column a variable, every row an obs, and cell a single value
+visits_long <- delta_visits %>% 
+    pivot_longer(cols = c(sm_boat, med_boat, lrg_boat, bank_angler, scientist, cars),
+                 names_to = "visitor_type",
+                 values_to = "quantity") %>%
+    rename(restore_loc = eco_restore_approximate_location) %>% 
+    select(-notes)
+
+## Checking the outcome
+head(visits_long)
+```
+
+```{r}
+# calculate daily visits by locality, date, and visitor type
+daily_visits_loc <- visits_long %>%
+    group_by(restore_loc, date, visitor_type) %>% 
+    summarise(daily_visits = sum(quantity))
+    
+head(daily_visits_loc)
+```
+
+```{r}
+# reorder restore_loc based on total number of visits by adding a column with total visits by location
+daily_visits_totals <- daily_visits_loc %>% 
+    group_by(restore_loc) %>%
+    mutate(n = sum(daily_visits)) %>% 
+    ungroup() %>%
+    mutate(restore_loc = fct_reorder(restore_loc, n))
+```
+
+```{r}
+# presaving the theme with legend position and theme type
+my_theme <- theme_bw(base_size = 16) +
+    theme(legend.position = "bottom",
+          axis.ticks.y = element_blank())
+
+# my favorite plot of the data, with a title, subtitle, labels, and theme. also rotating it sideways and expanding the bars to the axis line. finally, also changing the color palette to be higher contrast
+ggplot(data = daily_visits_totals,
+       aes(x = daily_visits, y = restore_loc,
+           fill = visitor_type)) +
+    geom_col() +
+    scale_fill_viridis_d() +
+    labs(x = "Number of Visits",
+         y = "Restoration Location",
+         fill = "Type of Visitor",
+         title = "Total Number of Visits to Delta Restoration Areas by visitor type",
+         subtitle = "Sum of all visits during study period") +
+    scale_x_continuous(breaks = seq(0,120, 20), expand = c(0,0)) +
+    my_theme
+```
+
+```{r}
+# create an interactive table by making a df of unique sampling locations
+locations <- visits_long %>%
+    distinct(restore_loc, .keep_all = TRUE) %>%
+    select(restore_loc, latitude, longitude)
+
+head(locations)
+```
+
+```{r}
+# plotting my favorite interactive map with layered reference map on top
+leaflet(locations) %>%
+    addProviderTiles(providers$Esri.WorldTopoMap) %>%
+    addCircleMarkers(
+        lng = ~ longitude,
+        lat = ~ latitude,
+        popup = ~ restore_loc,
+        radius = 5,
+        # set fill properties
+        fillColor = "salmon",
+        fillOpacity = 1,
+        # set stroke properties
+        stroke = TRUE,
+        weight = 0.5,
+        color = "white",
+        opacity = 1)
+```
+
+## Discussion
+
+Ggplot2 is an incredibly powerful package that has much, much more applicability than I could have guessed before now. The interactive map is a game changer that I am excited to use in my next conference poster. I especially like how easy it is to swap elements around and layer them on top of each other. For me, the most difficult part about graphing is figuring out which variables map to which axes to get the image I want. Having such a through template will be extremely useful to me in my immediate future.
