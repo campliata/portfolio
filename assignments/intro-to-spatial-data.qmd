@@ -1,0 +1,20 @@
+---
+title: "working with spatial data in R"
+editor: visual
+---
+
+```{r}
+library(readr)
+library(here)
+library(sf)
+library(ggplot2)
+library(leaflet)
+library(scales)
+library(ggspatial)
+library(dplyr)
+```
+
+```{r}
+# read in shapefile using read_sf()
+ak_rgns_sf <- read_sf(here("data/shapefile_demo_data/ak_regions_simp.shp"))
+```
