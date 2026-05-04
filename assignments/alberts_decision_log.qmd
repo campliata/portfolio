@@ -1,0 +1,11 @@
+---
+title: "decision_log"
+editor: visual
+author: "Tokay Alberts"
+---
+
+## Decision Log
+
+I chose Alaska Albers 3338 for the spatial join because it creates in a projection of the data that results in a map that better fits our data. Alaska covers a large geographic area, so choosing a projection that is specific to mapping it will make the map less distorted and more readable for us.
+
+I think that completing the ggspatial part of the assignment was helpful, since it resulted in a more professional looking map that I preferred most out of all of the maps we created in this assignment. I also appreciate knowing about additional ways to map my data to get the sort of aesthetic I might be aiming for.
