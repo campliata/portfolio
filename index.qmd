@@ -6,8 +6,8 @@ author: "Tokay Alberts"
 
 ## Course Lessons
 
--   [Cleaning and Wrangling Data](https://campliata.github.io/assignments/a03.html)
+-   [Cleaning and Wrangling Data](https://campliata.github.io/portfolio/assignments/a03.html)
 
--   [Data Visualization](https://campliata.github.io/assignments/a05.html)
+-   [Data Visualization](https://campliata.github.io/portfolio/assignments/a05.html)
 
--   [Intro To Spatial Data](https://campliata.github.io/assignments/intro-to-spatial-data.html)
+-   [Intro To Spatial Data](https://campliata.github.io/portfolio/assignments/intro-to-spatial-data.html)
